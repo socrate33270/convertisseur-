@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertisseur JSON pour Établissements</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .step {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .step h2 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background-color: #eee;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+        }
+        .tab-content {
+            display: none;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 0 5px 5px 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 200px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #clearAll {
+            background-color: #ff5252;
+        }
+        #clearAll:hover {
+            background-color: #e04646;
+        }
+        #restaurantList {
+            margin-top: 20px;
+        }
+        .restaurant-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+        }
+        pre {
+            width: 100%;
+            height: 300px;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            overflow: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .action-buttons {
+            margin-top: 20px;
+        }
+        .info {
+            background-color: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .example {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        #importResultMessage, #convertResultMessage {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .settings {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .settings h3 {
+            margin-top: 0;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .checkbox-group input {
+            width: auto;
+            margin-right: 10px;
+        }
+        #categoryName {
+            width: 200px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Convertisseur JSON pour Établissements</h1>
+    
+    <div class="info">
+        Cet outil vous permet de convertir des données d'établissements d'un format JSON simple vers un format JSON structuré.
+    </div>
+    
+    <div class="step">
+        <h2>Étape 1: Configuration</h2>
+        <div class="settings">
+            <h3>Options de conversion</h3>
+            <div class="checkbox-group">
+                <label for="categoryName">Nom de la catégorie principale:</label>
+                <input type="text" id="categoryName" value="hotels">
+                <span>(ex: restaurants, hotels, salles)</span>
+            </div>
+            <div class="checkbox-group">
+                <label for="subcategoryName">Nom de la sous-catégorie:</label>
+                <input type="text" id="subcategoryName" value="affaires">
+                <span>(ex: affaires, loisirs, tourisme)</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="step">
+        <h2>Étape 2: Importer vos données</h2>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="jsonImport">Format JSON simple</div>
+            <div class="tab" data-tab="manualEntry">Saisie manuelle</div>
+            <div class="tab" data-tab="bulkEntry">Import en masse</div>
+        </div>
+        
+        <div class="tab-content active" id="jsonImport">
+            <p>Collez ci-dessous vos données JSON au format simple:</p>
+            
+            <div class="example">
+                [<br>
+                &nbsp;&nbsp;{<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;"name": "Hôtel du lion d'Or",<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;"address": "9 Cr Jourdan, 87000 Limoges, France",<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;"phone": "09 86 58 41 11",<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;"website": null<br>
+                &nbsp;&nbsp;}<br>
+                ]
+            </div>
+            
+            <p>Ou bien dans ce format:</p>
+            <div class="example">
+                [<br>
+                &nbsp;&nbsp;{<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;"nom": "Centre de Congrès et d'Expositions de Limoges",<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;"adresse": "Place des Carmes, 87000 Limoges, France",<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;"telephone": "+33 (0)5 55 45 90 90",<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;"description": "Vaste espace modulable accueillant des congrès..."<br>
+                &nbsp;&nbsp;}<br>
+                ]
+            </div>
+            
+            <textarea id="jsonInput" placeholder="Collez votre JSON ici..."></textarea>
+            <button id="convertJson">Convertir le JSON</button>
+            <div id="convertResultMessage"></div>
+        </div>
+        
+        <div class="tab-content" id="manualEntry">
+            <form id="restaurantForm">
+                <label for="nom">Nom de l'établissement:</label>
+                <input type="text" id="nom" required>
+                
+                <label for="description">Description:</label>
+                <textarea id="description" style="height: 80px;"></textarea>
+                
+                <label for="type">Type d'établissement:</label>
+                <input type="text" id="type" placeholder="Ex: Restaurant Français, Hôtel...">
+                
+                <label for="adresse">Adresse:</label>
+                <input type="text" id="adresse" required>
+                
+                <label for="codePostal">Code postal:</label>
+                <input type="text" id="codePostal">
+                
+                <label for="ville">Ville:</label>
+                <input type="text" id="ville">
+                
+                <label for="telephone">Téléphone:</label>
+                <input type="text" id="telephone" placeholder="+33 5 55 XX XX XX">
+                
+                <label for="email">Email ou site web:</label>
+                <input type="text" id="email">
+                
+                <button type="button" id="addRestaurant">Ajouter cet établissement</button>
+                <button type="reset">Effacer le formulaire</button>
+            </form>
+        </div>
+        
+        <div class="tab-content" id="bulkEntry">
+            <h3>Importation en masse</h3>
+            <p>Collez ci-dessous vos données au format texte (un établissement par ligne). Chaque ligne doit suivre ce format:</p>
+            
+            <div class="example">
+                Nom | Description | Type | Adresse | Code postal | Ville | Téléphone | Email/Site web
+            </div>
+            
+            <p>Exemple:</p>
+            <div class="example">
+                Le Bistrot du Coin | Un bistrot traditionnel avec une ambiance conviviale | Restaurant Français | 15 rue de Paris | 75001 | Paris | +33 1 23 45 67 89 | contact@bistrotducoin.fr<br>
+                La Pizzeria | Authentiques pizzas italiennes cuites au feu de bois | Restaurant Italien | 8 Place du Marché | 69000 | Lyon | +33 4 56 78 90 12 | info@lapizzeria.com
+            </div>
+            
+            <textarea id="bulkData" placeholder="Collez vos données ici..."></textarea>
+            <button id="importBulk">Importer les données</button>
+            <div id="importResultMessage"></div>
+        </div>
+    </div>
+    
+    <div class="step">
+        <h2>Étape 3: Liste des établissements ajoutés</h2>
+        <div class="action-buttons">
+            <button id="clearAll">Effacer toute la liste</button>
+        </div>
+        <div id="restaurantList">
+            <p>Aucun établissement ajouté pour l'instant.</p>
+        </div>
+    </div>
+    
+    <div class="step">
+        <h2>Étape 4: Générer et télécharger le fichier JSON</h2>
+        <button id="generateJson">Générer le JSON</button>
+        <button id="downloadJson" disabled>Télécharger le fichier JSON</button>
+        
+        <h3>Aperçu du JSON:</h3>
+        <pre id="jsonOutput">Le JSON apparaîtra ici une fois généré.</pre>
+    </div>
+    
+    <script>
+        // Tableau pour stocker les restaurants
+        let establishments = [];
+        
+        // Gestion des onglets
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Retirer la classe active de tous les onglets
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                // Ajouter la classe active à l'onglet cliqué
+                this.classList.add('active');
+                
+                // Masquer tous les contenus d'onglet
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                // Afficher le contenu correspondant à l'onglet cliqué
+                document.getElementById(this.dataset.tab).classList.add('active');
+            });
+        });
+        
+        // Fonction pour convertir le JSON
+        document.getElementById('convertJson').addEventListener('click', function() {
+            const jsonInput = document.getElementById('jsonInput').value.trim();
+            const resultMessage = document.getElementById('convertResultMessage');
+            
+            if (!jsonInput) {
+                resultMessage.className = 'error';
+                resultMessage.textContent = 'Erreur: Aucune donnée JSON à convertir.';
+                return;
+            }
+            
+            try {
+                // Analyser le JSON d'entrée
+                const sourceData = JSON.parse(jsonInput);
+                
+                if (!Array.isArray(sourceData)) {
+                    resultMessage.className = 'error';
+                    resultMessage.textContent = 'Erreur: Le JSON doit être un tableau d\'objets.';
+                    return;
+                }
+                
+                // Transformer les données
+                const newItems = sourceData.map(item => transformSourceToTarget(item));
+                
+                // Ajouter à notre liste
+                establishments = establishments.concat(newItems);
+                
+                // Mettre à jour l'affichage
+                updateEstablishmentList();
+                
+                // Afficher le message de succès
+                resultMessage.className = 'success';
+                resultMessage.textContent = `${newItems.length} établissement(s) importé(s) avec succès!`;
+                
+                // Vider la zone de texte
+                document.getElementById('jsonInput').value = '';
+                
+            } catch (error) {
+                resultMessage.className = 'error';
+                resultMessage.textContent = `Erreur lors de l'analyse du JSON: ${error.message}`;
+            }
+        });
+        
+        // Fonction pour transformer le format source vers le format cible
+        function transformSourceToTarget(sourceItem) {
+            // Vérifier la structure et adapter en fonction des champs disponibles
+            let nom, description, adresse, telephone, email, type;
+            
+            // Gérer les différents formats possibles
+            nom = sourceItem.nom || sourceItem.name || "";
+            description = sourceItem.description || "";
+            
+            // Adresse peut être dans différents champs selon le format
+            if (sourceItem.adresse) {
+                adresse = sourceItem.adresse;
+            } else if (sourceItem.address) {
+                adresse = sourceItem.address;
+            } else {
+                adresse = "";
+            }
+            
+            // Téléphone peut être dans différents champs
+            telephone = sourceItem.telephone || sourceItem.phone || "";
+            
+            // Email ou site web
+            email = sourceItem.email || sourceItem.website || "";
+            
+            // Type d'établissement
+            type = sourceItem.type || determineType(nom);
+            
+            // Extraire les informations d'adresse
+            const addressInfo = extractAddressInfo(adresse);
+            
+            // Créer l'élément transformé
+            return {
+                nom: nom,
+                description: description || `${nom} est un établissement situé à ${addressInfo.ville || "Limoges"}.`,
+                type: type,
+                contact: {
+                    adresse: addressInfo.adresse,
+                    codePostal: addressInfo.codePostal || "87000",
+                    ville: addressInfo.ville || "Limoges",
+                    telephone: formatPhoneNumber(telephone),
+                    email: email
+                },
+                opening_hours: "Voir site web"
+            };
+        }
+        
+        // Fonction pour extraire les informations d'adresse
+        function extractAddressInfo(fullAddress) {
+            if (!fullAddress) return { adresse: "", codePostal: "", ville: "" };
+            
+            // Extraire les informations d'adresse
+            const addressParts = fullAddress.split(', ');
+            let adresse = addressParts[0] || "";
+            let codePostal = "";
+            let ville = "";
+            
+            // Essayer de trouver le code postal et la ville
+            if (addressParts.length > 1) {
+                // Chercher un pattern comme "87000 Limoges"
+                for (let i = 1; i < addressParts.length; i++) {
+                    const part = addressParts[i];
+                    const postalMatch = part.match(/(\d{5})\s+(.*)/);
+                    if (postalMatch) {
+                        codePostal = postalMatch[1];
+                        ville = postalMatch[2];
+                        break;
+                    }
+                }
+                
+                // Si aucun code postal n'a été trouvé, essayer d'extraire uniquement la ville
+                if (!codePostal && addressParts.length >= 2) {
+                    // Considérer la deuxième partie comme la ville
+                    if (addressParts[1].includes("France")) {
+                        ville = addressParts.length >= 3 ? addressParts[1] : "Limoges";
+                    } else {
+                        ville = addressParts[1];
+                    }
+                }
+            }
+            
+            return { adresse, codePostal, ville };
+        }
+        
+        // Déterminer le type d'établissement en fonction du nom
+        function determineType(nom) {
+            const name = nom.toLowerCase();
+            
+            if (name.includes("restaurant") || name.includes("bistrot") || name.includes("café") || name.includes("cafe")) {
+                return "Restaurant";
+            } else if (name.includes("hôtel") || name.includes("hotel") || name.includes("logis")) {
+                return "Hôtel";
+            } else if (name.includes("salle") || name.includes("centre") || name.includes("espace") || name.includes("congrès")) {
+                return "Salle de réunion";
+            } else {
+                return "Établissement";
+            }
+        }
+        
+        // Fonction pour formater les numéros de téléphone
+        function formatPhoneNumber(phone) {
+            if (!phone) return "";
+            
+            // Si le numéro commence déjà par +33, le retourner tel quel
+            if (phone.startsWith("+33")) return phone;
+            
+            // Enlever les espaces et autres caractères non numériques
+            const cleaned = phone.replace(/\D/g, '');
+            
+            // Si le numéro commence par 0, le remplacer par +33
+            if (cleaned.startsWith('0')) {
+                return "+33 " + cleaned.substring(1);
+            }
+            
+            return "+33 " + cleaned; // Ajouter +33 par défaut pour les numéros sans 0 initial
+        }
+        
+        // Fonction pour ajouter un établissement manuellement
+        document.getElementById('addRestaurant').addEventListener('click', function() {
+            // Récupérer les valeurs du formulaire
+            const nom = document.getElementById('nom').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const type = document.getElementById('type').value.trim();
+            const adresse = document.getElementById('adresse').value.trim();
+            const codePostal = document.getElementById('codePostal').value.trim();
+            const ville = document.getElementById('ville').value.trim();
+            const telephone = document.getElementById('telephone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            // Vérifier si les champs requis sont remplis
+            if (!nom || !adresse) {
+                alert('Veuillez remplir au moins le nom et l\'adresse de l\'établissement');
+                return;
+            }
+            
+            // Ajouter l'établissement
+            addEstablishmentToList(nom, description, type, adresse, codePostal, ville, telephone, email);
+            
+            // Réinitialiser le formulaire
+            document.getElementById('restaurantForm').reset();
+            
+            // Notification
+            alert('Établissement "' + nom + '" ajouté avec succès!');
+        });
+        
+        // Fonction pour importer en masse
+        document.getElementById('importBulk').addEventListener('click', function() {
+            const bulkData = document.getElementById('bulkData').value.trim();
+            const resultMessage = document.getElementById('importResultMessage');
+            
+            if (!bulkData) {
+                resultMessage.className = 'error';
+                resultMessage.textContent = 'Erreur: Aucune donnée à importer.';
+                return;
+            }
+            
+            // Diviser en lignes
+            const lines = bulkData.split('\n');
+            let successCount = 0;
+            let failureCount = 0;
+            
+            lines.forEach((line, index) => {
+                if (!line.trim()) return; // Ignorer les lignes vides
+                
+                // Diviser par le séparateur |
+                const parts = line.split('|').map(part => part.trim());
+                
+                // Vérifier si nous avons au moins un nom et une adresse
+                if (parts.length < 2 || !parts[0] || !parts[3]) {
+                    failureCount++;
+                    console.error(`Ligne ${index + 1} invalide: ${line}`);
+                    return;
+                }
+                
+                // Extraire les données
+                const [nom, description, type, adresse, codePostal, ville, telephone, email] = parts;
+                
+                // Ajouter à la liste
+                addEstablishmentToList(nom, description, type, adresse, codePostal, ville, telephone, email);
+                successCount++;
+            });
+            
+            // Afficher le résultat
+            if (failureCount === 0) {
+                resultMessage.className = 'success';
+                resultMessage.textContent = `${successCount} établissement(s) importé(s) avec succès!`;
+            } else {
+                resultMessage.className = 'warning';
+                resultMessage.textContent = `${successCount} établissement(s) importé(s). ${failureCount} ligne(s) ignorée(s) en raison d'erreurs.`;
+            }
+            
+            // Vider la zone de texte d'import
+            document.getElementById('bulkData').value = '';
+        });
+        
+        // Fonction pour ajouter un établissement à la liste
+        function addEstablishmentToList(nom, description, type, adresse, codePostal, ville, telephone, email) {
+            // Créer l'objet établissement
+            const establishment = {
+                nom: nom,
+                description: description || `${nom} est un établissement situé à ${ville || "Limoges"}.`,
+                type: type || determineType(nom),
+                contact: {
+                    adresse: adresse,
+                    codePostal: codePostal || "87000",
+                    ville: ville || "Limoges",
+                    telephone: formatPhoneNumber(telephone),
+                    email: email || ""
+                },
+                opening_hours: "Voir site web"
+            };
+            
+            // Ajouter au tableau
+            establishments.push(establishment);
+            
+            // Mettre à jour l'affichage
+            updateEstablishmentList();
+        }
+        
+        // Fonction pour mettre à jour la liste des établissements
+        function updateEstablishmentList() {
+            const listContainer = document.getElementById('restaurantList');
+            
+            if (establishments.length === 0) {
+                listContainer.innerHTML = '<p>Aucun établissement ajouté pour l\'instant.</p>';
+                
+                // Désactiver les boutons quand la liste est vide
+                document.getElementById('generateJson').disabled = true;
+                document.getElementById('downloadJson').disabled = true;
+                document.getElementById('jsonOutput').textContent = 'Le JSON apparaîtra ici une fois généré.';
+                return;
+            }
+            
+            let html = '';
+            establishments.forEach((establishment, index) => {
+                html += `
+                    <div class="restaurant-card">
+                        <h3>${establishment.nom}</h3>
+                        <p><strong>Type:</strong> ${establishment.type}</p>
+                        <p><strong>Adresse:</strong> ${establishment.contact.adresse}, ${establishment.contact.codePostal} ${establishment.contact.ville}</p>
+                        <p><strong>Téléphone:</strong> ${establishment.contact.telephone}</p>
+                        <button onclick="removeEstablishment(${index})">Supprimer</button>
+                    </div>
+                `;
+            });
+            
+            listContainer.innerHTML = html;
+            
+            // Activer le bouton Générer JSON s'il y a des établissements
+            document.getElementById('generateJson').disabled = false;
+        }
+        
+        // Fonction pour supprimer un établissement
+        window.removeEstablishment = function(index) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cet établissement?')) {
+                establishments.splice(index, 1);
+                updateEstablishmentList();
+            }
+        };
+        
+        // Fonction pour effacer toute la liste
+        document.getElementById('clearAll').addEventListener('click', function() {
+            if (establishments.length === 0) {
+                alert('La liste est déjà vide.');
+                return;
+            }
+            
+            if (confirm('Êtes-vous sûr de vouloir supprimer tous les établissements?')) {
+                establishments = [];
+                updateEstablishmentList();
+            }
+        });
+        
+        // Générer le JSON
+        document.getElementById('generateJson').addEventListener('click', function() {
+            // Récupérer les noms de catégorie et sous-catégorie
+            const categoryName = document.getElementById('categoryName').value.trim() || "hotels";
+            const subcategoryName = document.getElementById('subcategoryName').value.trim() || "affaires";
+            
+            // Créer l'objet JSON avec les catégories personnalisées
+            const jsonObj = {
+                [categoryName]: {
+                    [subcategoryName]: establishments
+                }
+            };
+            
+            // Convertir en chaîne JSON avec formatage
+            const jsonString = JSON.stringify(jsonObj, null, 2);
+            
+            // Afficher dans le conteneur
+            document.getElementById('jsonOutput').textContent = jsonString;
+            
+            // Activer le bouton de téléchargement
+            document.getElementById('downloadJson').disabled = false;
+        });
+        
+        // Télécharger le JSON
+        document.getElementById('downloadJson').addEventListener('click', function() {
+            // Récupérer les noms de catégorie et sous-catégorie
+            const categoryName = document.getElementById('categoryName').value.trim() || "hotels";
+            const subcategoryName = document.getElementById('subcategoryName').value.trim() || "affaires";
+            
+            // Créer l'objet JSON avec les catégories personnalisées
+            const jsonObj = {
+                [categoryName]: {
+                    [subcategoryName]: establishments
+                }
+            };
+            
+            // Convertir en chaîne JSON
+            const jsonString = JSON.stringify(jsonObj, null, 2);
+            
+            // Créer un objet Blob
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            
+            // Créer un lien de téléchargement
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${categoryName}_${subcategoryName}.json`;
+            
+            // Déclencher le téléchargement
+            document.body.appendChild(a);
+            a.click();
+            
+            // Nettoyer
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
